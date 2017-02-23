@@ -164,6 +164,57 @@ def test_similarity_identity():
             assert len(c) == 1
             assert c[0][0] == 1
 
+def test_generative_similarity():
+    print bql2sql('''
+        estimate generative similarity
+            of (
+                name = 'Uganda'
+            )
+            to existing rows (
+                rowid between 1 AND 100
+            )
+            and hypothetical rows with values (
+                ("age" = 82, "weight" = 14),
+                ("age" = 74, label = 'Europe', "weight" = 7)
+            )
+            in the context of
+              "age"
+        by p1
+    ''')
+    print bql2sql('''
+        estimate generative similarity
+            of (
+                name = 'Uganda'
+            )
+            to existing rows (
+                rowid between 1 AND 100
+            )
+            in the context of
+              "age"
+        by p1
+    ''')
+    with pytest.raises(BQLError):
+        print bql2sql('''
+            estimate generative similarity
+                to hypothetical rows with values (
+                    ("age" = 82, "weight" = 14),
+                    ("age" = 74, label = 'Europe', "weight" = 7)
+                )
+                in the context of
+                  "age"
+            by p1
+        ''')
+    print bql2sql('''
+        estimate generative similarity
+            to hypothetical rows with values (
+                ("age" = 82, "weight" = 14),
+                ("age" = 74, label = 'Europe', "weight" = 7)
+            )
+            in the context of
+              "age"
+        from p1
+    ''')
+
 @stochastic(max_runs=2, min_passes=1)
 def test_conditional_probability(seed):
     with test_core.t1(seed=seed) as (bdb, _population_id, _generator_id):

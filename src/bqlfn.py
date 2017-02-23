@@ -40,6 +40,7 @@ def bayesdb_install_bql(db, cookie):
     function("bql_column_mutual_information", -1, bql_column_mutual_information)
     function("bql_column_value_probability", -1, bql_column_value_probability)
     function("bql_row_similarity", 5, bql_row_similarity)
+    function("bql_row_generative_similarity", 5, bql_row_similarity)
     function("bql_row_column_predictive_probability", 4,
         bql_row_column_predictive_probability)
     function("bql_predict", 6, bql_predict)
@@ -412,6 +413,23 @@ def bql_row_similarity(
         # XXX Change [colno] to colno by updating IBayesDBMetamodel.
         return metamodel.row_similarity(
             bdb, generator_id, None, rowid, target_rowid, [colno])
+    generator_ids = _retrieve_generator_ids(bdb, population_id, generator_id)
+    similarities = map(generator_similarity, generator_ids)
+    return stats.arithmetic_mean(similarities)
+
+# Row function:  GENERATIVE SIMILARITY TO (<target_row>)
+#  [<AND HYPOTHETICAL ROWS WITH VALUES ((...))] IN THE CONTEXT OF <column>
+def bql_row_generative_similarity(
+        bdb, population_id, generator_id, target_rowid, query_rowids,
+        *constraint_args):
+    if target_rowid is None:
+        raise BQLError(bdb, 'No such target row for SIMILARITY')
+    def generator_similarity(generator_id):
+        metamodel = core.bayesdb_generator_metamodel(bdb, generator_id)
+        return 1
+        # XXX Change [colno] to colno by updating IBayesDBMetamodel.
+        # return metamodel.generative_similarity(
+        #     bdb, generator_id, target_rowid, query_rowids, constraint_args)
     generator_ids = _retrieve_generator_ids(bdb, population_id, generator_id)
     similarities = map(generator_similarity, generator_ids)
     return stats.arithmetic_mean(similarities)
